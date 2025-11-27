@@ -5,6 +5,9 @@ node_modules
 dist
 *.tsbuildinfo
 
+# Screenshots
+screenshot/
+
 # Test coverage
 coverage
 .nyc_output

@@ -56,5 +56,9 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "playwright": "^1.57.0",
+    "simplex-noise": "^4.0.3"
   }
 }
