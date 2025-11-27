@@ -4,6 +4,7 @@ import MorseCodeTranslator, { AudioResult } from '../../src/index';
 import { useTheme } from './composables/useTheme';
 import { useLanguage } from './composables/useLanguage';
 import BackgroundEffect from './components/BackgroundEffect.vue';
+import CustomSelect from './components/CustomSelect.vue';
 
 const { isDark, toggleTheme } = useTheme();
 const { currentLang, toggleLanguage, t } = useLanguage();
@@ -17,12 +18,27 @@ const showCopied = ref(false);
 const errorMsg = ref('');
 const showHelp = ref(false);
 
+// Decoding priority (default to '1' for Latin)
+const decodePriority = ref('1');
+
+const priorityOptions = [
+  { label: 'Latin (English)', value: '1' },
+  { label: 'Cyrillic (Russian)', value: '5' },
+  { label: 'Greek', value: '6' },
+  { label: 'Hebrew', value: '7' },
+  { label: 'Arabic', value: '8' },
+  { label: 'Persian', value: '9' },
+  { label: 'Japanese', value: '10' },
+  { label: 'Korean', value: '11' },
+  { label: 'Thai', value: '12' },
+];
+
 // State memory
 const encodeInput = ref('');
 const decodeInput = ref('');
 
 // Translation logic
-watch([inputText, mode], ([newText, newMode]) => {
+watch([inputText, mode, decodePriority], ([newText, newMode, newPriority]) => {
   errorMsg.value = ''; // Clear previous errors
   try {
     if (!MorseCodeTranslator || !MorseCodeTranslator.encode) {
@@ -39,7 +55,8 @@ watch([inputText, mode], ([newText, newMode]) => {
       outputText.value = MorseCodeTranslator.encode(newText, { priority: 10 });
     } else {
       // Morse -> Text
-      const decoded = MorseCodeTranslator.decode(newText);
+      // Pass the selected priority to resolve ambiguities (e.g., Cyrillic vs Latin)
+      const decoded = MorseCodeTranslator.decode(newText, { priority: newPriority as any });
       outputText.value = MorseCodeTranslator.decodeCN(decoded);
     }
   } catch (e: any) {
@@ -289,6 +306,15 @@ const setMode = (m: 'encode' | 'decode') => {
               <div v-else>
                 {{ outputText }}
               </div>
+            </div>
+
+            <!-- Decoding Priority Selector (Moved to Output Area) -->
+            <div v-if="mode === 'decode'" class="absolute bottom-4 left-4 z-20">
+              <CustomSelect
+                v-model="decodePriority"
+                :options="priorityOptions"
+                :title="t('input.priorityTitle') || 'Decoding Language Priority'"
+              />
             </div>
 
             <!-- Copy Button -->
