@@ -59,7 +59,7 @@ const setLines = () => {
   lines = [];
 
   // Config
-  const xGap = 20; // Optimized gap
+  const xGap = 20; 
   const yGap = 32;
 
   const oWidth = width + 200;
@@ -82,11 +82,10 @@ const setLines = () => {
       });
     }
 
-    // Create SVG Path
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.classList.add('wave-line');
-    // Tailwind classes for stroke color adapting to theme
-    path.setAttribute('class', 'wave-line stroke-gray-400/20 dark:stroke-white/10 fill-none stroke-[1px] transition-colors duration-300');
+    // Blue Gray lines (#BFC8D7)
+    path.setAttribute('class', 'wave-line stroke-[#BFC8D7] dark:stroke-[#BFC8D7]/20 fill-none stroke-[1px] transition-colors duration-300');
     
     svgRef.value.appendChild(path);
     paths.push(path);
@@ -99,7 +98,6 @@ const moved = (point: any, withCursorForce = true) => {
     x: point.x + point.wave.x + (withCursorForce ? point.cursor.x : 0),
     y: point.y + point.wave.y + (withCursorForce ? point.cursor.y : 0),
   };
-  // Round for performance
   coords.x = Math.round(coords.x * 10) / 10;
   coords.y = Math.round(coords.y * 10) / 10;
   return coords;
@@ -108,18 +106,15 @@ const moved = (point: any, withCursorForce = true) => {
 const movePoints = (t: number) => {
   lines.forEach((points) => {
     points.forEach((p) => {
-      // Simpler Wave: Vertical lines waving in X direction
-      // Reduced speed: t * 0.0005 (was 0.002)
+      // Super Slow Speed: 0.0002
       const nVal = noise2D(
-        p.x * 0.0005 + t * 0.0005, // X variation
-        p.y * 0.0015 + t * 0.0005  // Y variation (vertical flow)
+        p.x * 0.0005 + t * 0.0002, 
+        p.y * 0.0015 + t * 0.0002
       );
       
-      // Direct mapping: map noise (-1 to 1) to x offset (-30 to 30)
       p.wave.x = nVal * 30; 
-      p.wave.y = 0; // Keep Y stable for vertical lines
+      p.wave.y = 0;
 
-      // Mouse Interaction
       const dx = p.x - mouse.sx;
       const dy = p.y - mouse.sy;
       const d = Math.hypot(dx, dy);
@@ -132,10 +127,9 @@ const movePoints = (t: number) => {
         p.cursor.vy += Math.sin(mouse.a) * f * l * mouse.vs * 0.00065;
       }
 
-      // Physics
-      p.cursor.vx += (0 - p.cursor.x) * 0.01; // Higher tension for snappier return
+      p.cursor.vx += (0 - p.cursor.x) * 0.01; 
       p.cursor.vy += (0 - p.cursor.y) * 0.01;
-      p.cursor.vx *= 0.9; // Friction
+      p.cursor.vx *= 0.9; 
       p.cursor.vy *= 0.9;
       
       p.cursor.x += p.cursor.vx;
@@ -146,18 +140,12 @@ const movePoints = (t: number) => {
 
 const drawLines = () => {
   lines.forEach((points, index) => {
-    // Build path string
     let p1 = moved(points[0], false);
     let d = `M ${p1.x} ${p1.y}`;
 
     points.forEach((pt, i) => {
       const isLast = i === points.length - 1;
       p1 = moved(pt, !isLast);
-      // Simple LineTo for performance (CurveTo 'Q' is smoother but slower)
-      // Reference used 'L' in the commented code but active code used `L`.
-      // Wait, reference code:
-      // d += `L ${p1.x} ${p1.y}`
-      // It commented out the Q curve.
       d += ` L ${p1.x} ${p1.y}`;
     });
 
@@ -168,7 +156,6 @@ const drawLines = () => {
 const tick = () => {
   time++;
 
-  // Mouse smoothing
   mouse.sx += (mouse.x - mouse.sx) * 0.1;
   mouse.sy += (mouse.y - mouse.sy) * 0.1;
 
@@ -210,6 +197,6 @@ onUnmounted(() => {
 <template>
   <svg 
     ref="svgRef" 
-    class="fixed inset-0 pointer-events-none -z-10 bg-[#F9FAF5] dark:bg-[#0F172A] transition-colors duration-500 w-full h-full"
+    class="fixed inset-0 pointer-events-none -z-10 bg-[#FAF9F5] dark:bg-[#1a1a1a] transition-colors duration-500 w-full h-full"
   ></svg>
 </template>
