@@ -4,12 +4,14 @@ import MorseCodeTranslator, { AudioResult } from '../../src/index';
 import { useTheme } from './composables/useTheme';
 import { useLanguage } from './composables/useLanguage';
 import { useVisualSignal } from './composables/useVisualSignal';
+import { useTTS } from './composables/useTTS';
 import BackgroundEffect from './components/BackgroundEffect.vue';
 import CustomSelect from './components/CustomSelect.vue';
 
 const { isDark, toggleTheme } = useTheme();
 const { currentLang, toggleLanguage, t } = useLanguage();
 const { isLit, isPlaying: isVisualPlaying, playSignal, stopSignal: stopVisualSignal } = useVisualSignal();
+const { playingId, speak: speakText, stop: stopText } = useTTS();
 
 const mode = ref<'encode' | 'decode'>('encode');
 const inputText = ref('');
@@ -285,9 +287,24 @@ onMounted(() => {
                 <span>{{ inputStats.chars }} {{ t('stats.chars') }}</span>
               </div>
 
-              <button @click="pasteFromClipboard" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-[#A2B59F] dark:hover:text-[#E3E2B4] bg-transparent dark:bg-gray-700/20 rounded-full shadow-none hover:bg-gray-100 dark:hover:bg-gray-600 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100" title="Paste">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-              </button>
+              <div class="absolute top-4 right-4 flex gap-2">
+                <!-- TTS Button (Encode Mode Only) -->
+                <button 
+                  v-if="mode === 'encode'"
+                  @click="speakText(inputText, 'input')"
+                  :disabled="!inputText"
+                  class="p-2 text-gray-400 hover:text-[#A2B59F] dark:hover:text-[#E3E2B4] bg-transparent dark:bg-gray-700/20 rounded-full shadow-none hover:bg-gray-100 dark:hover:bg-gray-600 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-30"
+                  title="Read Aloud"
+                >
+                  <svg v-if="playingId === 'input'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                </button>
+
+                <!-- Paste Button -->
+                <button @click="pasteFromClipboard" class="p-2 text-gray-400 hover:text-[#A2B59F] dark:hover:text-[#E3E2B4] bg-transparent dark:bg-gray-700/20 rounded-full shadow-none hover:bg-gray-100 dark:hover:bg-gray-600 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100" title="Paste">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -314,10 +331,23 @@ onMounted(() => {
                 <CustomSelect v-model="decodePriority" :options="priorityOptions" :title="t('input.priorityTitle') || 'Decoding Language Priority'" />
               </div>
 
-              <button v-if="outputText" @click="copyToClipboard" class="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-900 bg-white/20 hover:bg-white/40 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 focus:opacity-100" title="Copy">
-                <span v-if="showCopied" class="text-xs font-bold px-1">{{ t('output.copied') }}</span>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              </button>
+              <div class="absolute top-4 right-4 flex gap-2">
+                <!-- TTS Button (Decode Mode Only) -->
+                <button 
+                  v-if="mode === 'decode' && outputText"
+                  @click="speakText(outputText, 'output')"
+                  class="p-2 text-gray-600 hover:text-gray-900 bg-white/20 hover:bg-white/40 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  title="Read Aloud"
+                >
+                  <svg v-if="playingId === 'output'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                </button>
+
+                <button v-if="outputText" @click="copyToClipboard" class="p-2 text-gray-600 hover:text-gray-900 bg-white/20 hover:bg-white/40 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 focus:opacity-100" title="Copy">
+                  <span v-if="showCopied" class="text-xs font-bold px-1">{{ t('output.copied') }}</span>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
