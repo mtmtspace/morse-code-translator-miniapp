@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+*.tsbuildinfo
+
+<<<<<<< HEAD
+# Screenshots
+screenshot/
+
+=======
+>>>>>>> 0a63f93237ad08d1f455af6ff5588ebda5a2b63c
+# Test coverage
+coverage
+.nyc_output
+
+# Demo environment
+demo
+
+# Claude Code
+CLAUDE.md
+.claude
+
+# Editor
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
