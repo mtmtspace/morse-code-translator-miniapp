@@ -5,12 +5,8 @@ node_modules
 dist
 *.tsbuildinfo
 
-<<<<<<< HEAD
 # Screenshots
 screenshot/
-
-=======
->>>>>>> 0a63f93237ad08d1f455af6ff5588ebda5a2b63c
 # Test coverage
 coverage
 .nyc_output
@@ -28,6 +24,7 @@ CLAUDE.md
 *.swp
 *.swo
 *~
+*.code-workspace
 
 # OS
 .DS_Store
